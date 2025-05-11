@@ -10,6 +10,9 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.onCompletion
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
@@ -24,17 +27,17 @@ class MainActivity : AppCompatActivity() {
             insets
         }
         GlobalScope.launch {
-            val data = producer()
-            data.collect{
-                Log.d("Flows 1", it.toString())
-            }
-        }
-
-        GlobalScope.launch {
-            val data = producer()
-            delay(2500)
-            data.collect{
-                Log.d("Flows 2", it.toString())
+             producer()
+                .onStart {
+                    Log.d("onStart Flow", "Flow Started")
+                }.onCompletion {
+                     Log.d("onCompletion Flow", "Flow Completed")
+                 }
+                 .onEach {
+                     Log.d("About to Emit", it.toString())
+                 }
+                .collect{
+                Log.d("Collect Flow", it.toString())
             }
         }
 
