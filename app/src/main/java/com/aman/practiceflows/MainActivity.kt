@@ -6,6 +6,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collect
@@ -23,21 +24,16 @@ class MainActivity : AppCompatActivity() {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
-        GlobalScope.launch {
-            val data = producer()
-            data.collect{
-                Log.d("Flows 1", it.toString())
+        GlobalScope.launch(Dispatchers.Main) {
+            try {
+                producer()
+                    .collect {
+                        Log.d("Flows Collected", it.toString())
+                    }
+            } catch (e: Exception) {
+                Log.d("Flows Exception", e.message.toString())
             }
         }
-
-        GlobalScope.launch {
-            val data = producer()
-            delay(2500)
-            data.collect{
-                Log.d("Flows 2", it.toString())
-            }
-        }
-
     }
 
     fun producer() = flow<Int>{
@@ -45,6 +41,7 @@ class MainActivity : AppCompatActivity() {
         list.forEach {
             delay(1000)
             emit(it)
+            throw Exception("FLOW Exception")
         }
     }
 }
