@@ -23,11 +23,16 @@ class MainActivity : AppCompatActivity() {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
-        GlobalScope.launch {
+        val job = GlobalScope.launch {
             val data = producer()
             data.collect{
                 Log.d("Flows", it.toString())
             }
+        }
+
+        GlobalScope.launch{
+            delay(3700)
+            job.cancel()
         }
     }
 
