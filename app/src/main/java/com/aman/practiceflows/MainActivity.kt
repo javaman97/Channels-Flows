@@ -6,10 +6,14 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
@@ -23,18 +27,24 @@ class MainActivity : AppCompatActivity() {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
-        GlobalScope.launch {
-            val data = producer()
-            data.collect{
-                Log.d("Flows 1", it.toString())
-            }
-        }
+        GlobalScope.launch(Dispatchers.Main) {
+             producer()
+                 .map{
+                     delay ( 100)
+                    it * 2
+                     Log.d("Map Thread", "${ Thread.currentThread().name }")
+                 }
+                 .filter {
+                     Log.d("Filter Thread", "${ Thread.currentThread().name }")
+                     delay(200)
+                    it < 6
+                 }.flowOn(Dispatchers.IO) /*  Used for context switching in Flows as
+                 by default flows assume consumer producer run on same context
 
-        GlobalScope.launch {
-            val data = producer()
-            delay(2500)
-            data.collect{
-                Log.d("Flows 2", it.toString())
+                 ** the code above flowOn run on the context defined on flowOn
+                 */
+            .collect{
+                Log.d("Collected Thread", "${ Thread.currentThread().name }")
             }
         }
 
@@ -45,6 +55,7 @@ class MainActivity : AppCompatActivity() {
         list.forEach {
             delay(1000)
             emit(it)
+            Log.d("Emitter Thread", "${ Thread.currentThread().name }")
         }
     }
 }
