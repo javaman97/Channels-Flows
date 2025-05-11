@@ -9,7 +9,10 @@ import androidx.core.view.WindowInsetsCompat
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
@@ -27,19 +30,18 @@ class MainActivity : AppCompatActivity() {
             insets
         }
         GlobalScope.launch {
-             producer()
-                .onStart {
-                    Log.d("onStart Flow", "Flow Started")
-                }.onCompletion {
-                     Log.d("onCompletion Flow", "Flow Completed")
+             producer().map {
+                 it*2
+             }.filter {
+                     it % 2 == 0
                  }
-                 .onEach {
-                     Log.d("About to Emit", it.toString())
-                 }
-                .collect{
+                 .collect {
                 Log.d("Collect Flow", it.toString())
             }
         }
+    /*
+    Terminal Operators have suspend in their functions ( e.g. map/filter)
+     */
 
     }
 
