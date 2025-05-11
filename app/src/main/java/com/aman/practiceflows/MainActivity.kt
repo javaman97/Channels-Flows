@@ -26,13 +26,22 @@ class MainActivity : AppCompatActivity() {
         GlobalScope.launch {
             val data = producer()
             data.collect{
-                Log.d("Flows", it.toString())
+                Log.d("Flows 1", it.toString())
             }
         }
+
+        GlobalScope.launch {
+            val data = producer()
+            delay(2500)
+            data.collect{
+                Log.d("Flows 2", it.toString())
+            }
+        }
+
     }
 
     fun producer() = flow<Int>{
-        val list = listOf(1,2,3,4,5,6,7,8,9,10)
+        val list = listOf(1,2,3,4,5)
         list.forEach {
             delay(1000)
             emit(it)
