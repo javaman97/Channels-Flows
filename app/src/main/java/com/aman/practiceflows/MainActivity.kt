@@ -6,10 +6,14 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
@@ -23,18 +27,22 @@ class MainActivity : AppCompatActivity() {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
-        GlobalScope.launch {
-            val data = producer()
-            data.collect{
-                Log.d("Flows 1", it.toString())
-            }
-        }
-
-        GlobalScope.launch {
-            val data = producer()
-            delay(2500)
-            data.collect{
-                Log.d("Flows 2", it.toString())
+        GlobalScope.launch(Dispatchers.Main) {
+             producer()
+                 .map{
+                     delay ( 100)
+                    it * 2
+                     Log.d("Map", "${ Thread.currentThread().name }")
+                 }
+                 .filter {
+                     Log.d("Filter ", "${ Thread.currentThread().name }")
+                     delay(200)
+                    it < 6
+                 }.flowOn(Dispatchers.IO) /*  Used for context switching in Flows as
+                 by default flows assume consumer producer run on same context
+                 */
+            .collect{
+                Log.d("Collected Flow", "${ Thread.currentThread().name }")
             }
         }
 
