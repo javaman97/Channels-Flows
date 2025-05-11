@@ -8,15 +8,10 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onCompletion
-import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
+import kotlin.system.measureTimeMillis
 
 class MainActivity : AppCompatActivity() {
 
@@ -30,19 +25,22 @@ class MainActivity : AppCompatActivity() {
             insets
         }
         GlobalScope.launch {
-             producer().map {
-                 it*2
-             }.filter {
-                     it % 2 == 0
-                 }
-                 .collect {
-                Log.d("Collect Flow", it.toString())
+            val time = measureTimeMillis {
+                producer().buffer(3) /*
+                 Buffer Operator to store emitted value in buffer
+                  when producer is producing more fast than consumer to consume it
+              */
+                    .collect {
+                        delay(1500)
+                        Log.d("Collect Flow", it.toString())
+                    }
             }
+            Log.d("Time with Buffer", time.toString())
+            /*
+             Approximate  time without buffer is around 1250  but with
+             buffer it is around 800
+            *  */
         }
-    /*
-    Terminal Operators have suspend in their functions ( e.g. map/filter)
-     */
-
     }
 
     fun producer() = flow<Int>{
